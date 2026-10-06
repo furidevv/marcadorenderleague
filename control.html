@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ender League — Control</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&display=swap');
+*{box-sizing:border-box}body{margin:0;padding:28px;background:radial-gradient(circle at top,#4c1d95,#08050e 58%);color:#fff;font-family:Montserrat,sans-serif}.wrap{max-width:1050px;margin:auto}.title{font-size:31px;font-weight:900}.sub{opacity:.6;margin:5px 0 20px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.panel{background:#120c1be8;border:1px solid #c084fc2e;border-radius:18px;padding:20px;box-shadow:0 15px 45px #0006}.full{grid-column:1/-1}h2{font-size:15px;margin:0 0 13px}label{display:block;font-size:10px;opacity:.62;margin:11px 0 5px}input{width:100%;padding:11px 12px;border-radius:9px;border:1px solid #ffffff14;background:#0d0914;color:#fff;outline:0}input:focus{border-color:#8b5cf6}.row{display:flex;gap:8px;flex-wrap:wrap}button{border:0;border-radius:9px;padding:11px 14px;font:800 12px Montserrat;cursor:pointer;color:#fff}button:hover{filter:brightness(1.12);transform:translateY(-1px)}.p{background:#8b5cf6}.g{background:#22c55e}.r{background:#ef4444}.y{background:#facc15;color:#111}.d{background:#241b30}.score{font-size:44px;font-weight:900;text-align:center;margin:10px}.linkbox{display:flex;gap:8px}.linkbox input{flex:1}.mainlink{width:100%;padding:16px;background:linear-gradient(135deg,#6d28d9,#a855f7);font-size:15px}.hint{font-size:11px;line-height:1.5;opacity:.7;margin-top:10px}.ok{color:#86efac;font-size:12px;font-weight:800}.bad{color:#fca5a5;font-size:12px;font-weight:800}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="title">🟣 ENDER LEAGUE — CONTROL PRO</div>
+<div class="sub">Genera una sala, copia el enlace y pégalo directamente en OBS.</div>
+
+<div class="grid">
+<div class="panel full">
+<h2>🌐 ENLACE PARA OBS</h2>
+<div class="linkbox"><input id="obsUrl" readonly placeholder="Generando enlace..."><button class="p" onclick="copyLink()">COPIAR</button></div>
+<br><button class="mainlink" onclick="newRoom()">🔗 GENERAR NUEVO ENLACE</button>
+<div id="connection" class="hint">Conectando al servidor de salas...</div>
+</div>
+
+<div class="panel full">
+<h2>⚙️ PARTIDO</h2>
+<label>Liga</label><input id="league" value="ENDER LEAGUE">
+<label>Estado</label><input id="status" value="EN DIRECTO">
+</div>
+
+<div class="panel">
+<h2>🏠 LOCAL</h2>
+<label>Nombre</label><input id="hn" value="ENDER FC">
+<label>Abreviatura</label><input id="hs" value="END">
+<label>Logo (URL)</label><input id="hl" value="https://placehold.co/96x96/6d28d9/ffffff?text=EL">
+<div class="score" id="hscore">0</div>
+<div class="row"><button class="p" onclick="goal('home')">⚽ + GOL</button><button class="d" onclick="minus('home')">−</button><button class="y" onclick="card('home','yellow')">🟨</button><button class="r" onclick="card('home','red')">🟥</button></div>
+</div>
+
+<div class="panel">
+<h2>✈️ VISITANTE</h2>
+<label>Nombre</label><input id="an" value="NETHER FC">
+<label>Abreviatura</label><input id="as" value="NTH">
+<label>Logo (URL)</label><input id="al" value="https://placehold.co/96x96/6d28d9/ffffff?text=EL">
+<div class="score" id="ascore">0</div>
+<div class="row"><button class="p" onclick="goal('away')">⚽ + GOL</button><button class="d" onclick="minus('away')">−</button><button class="y" onclick="card('away','yellow')">🟨</button><button class="r" onclick="card('away','red')">🟥</button></div>
+</div>
+
+<div class="panel full">
+<h2>⏱️ TIEMPO</h2>
+<div class="row"><button class="g" onclick="run(true)">▶ INICIAR</button><button class="d" onclick="run(false)">⏸ PAUSAR</button><button class="d" onclick="resetClock()">↺ 00:00</button><button class="p" onclick="testGoal()">⚽ PROBAR GOOOAAALLL</button><button class="r" onclick="resetMatch()">🗑 REINICIAR TODO</button></div>
+</div>
+</div></div>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+let peer=null,room="",connections=[];
+let state={league:"ENDER LEAGUE",status:"EN DIRECTO",home:{name:"ENDER FC",short:"END",logo:"https://placehold.co/96x96/6d28d9/ffffff?text=EL",score:0,yellow:0,red:0},away:{name:"NETHER FC",short:"NTH",logo:"https://placehold.co/96x96/6d28d9/ffffff?text=EL",score:0,yellow:0,red:0},clock:0,running:true};
+
+function broadcast(msg){
+  connections=connections.filter(c=>c.open);
+  for(const c of connections){try{c.send(msg)}catch(e){}}
+}
+function newRoom(){
+  if(peer){try{peer.destroy()}catch(e){}}
+  connections=[]; $("obsUrl").value="Generando...";
+  // Random PeerJS ID avoids collisions.
+  peer=new Peer(undefined,{debug:0});
+  peer.on("open",id=>{
+    room=id;
+    const u=new URL("display.html",location.href);
+    u.searchParams.set("room",room);
+    $("obsUrl").value=u.href;
+    $("connection").innerHTML='<span class="ok">● Sala lista. Pega el enlace en OBS.</span>';
+  });
+  peer.on("connection",c=>{
+    connections.push(c);
+    c.on("open",()=>c.send({type:"STATE",state}));
+    c.on("data",msg=>{
+      if(msg.type==="REQUEST_STATE" && c.open) c.send({type:"STATE",state});
+    });
+    c.on("close",()=>{connections=connections.filter(x=>x!==c)});
+  });
+  peer.on("error",e=>{
+    console.error(e);
+    $("connection").innerHTML='<span class="bad">No se pudo crear la sala. Pulsa GENERAR NUEVO ENLACE.</span>';
+  });
+}
+function copyLink(){
+  const x=$("obsUrl");
+  if(!x.value||x.value==="Generando..."){newRoom();return}
+  navigator.clipboard?.writeText(x.value);
+  $("connection").innerHTML='<span class="ok">✓ Enlace copiado.</span>';
+}
+function read(){
+  state.league=$("league").value;state.status=$("status").value;
+  state.home.name=$("hn").value;state.home.short=$("hs").value;state.home.logo=$("hl").value;
+  state.away.name=$("an").value;state.away.short=$("as").value;state.away.logo=$("al").value;
+}
+function send(){read();broadcast({type:"STATE",state});update()}
+function goal(t){read();state[t].score++;broadcast({type:"STATE",state});broadcast({type:"GOAL",team:t});update()}
+function minus(t){read();state[t].score=Math.max(0,state[t].score-1);send()}
+function card(t,c){read();state[t][c]++;send()}
+function run(v){state.running=v;send()}
+function resetClock(){state.clock=0;send()}
+function testGoal(){broadcast({type:"GOAL",team:"home"})}
+function resetMatch(){if(!confirm("¿Reiniciar marcador, tarjetas y reloj?"))return;state.home.score=state.away.score=0;state.home.yellow=state.home.red=state.away.yellow=state.away.red=0;state.clock=0;state.running=true;send()}
+function update(){$("hscore").textContent=state.home.score;$("ascore").textContent=state.away.score}
+setInterval(()=>{if(state.running){state.clock++;broadcast({type:"STATE",state})}},1000);
+update();newRoom();
+</script>
+</body>
+</html>

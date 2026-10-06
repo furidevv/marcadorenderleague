@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ender League Scoreboard</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="scoreboard" class="scoreboard">
+  <div class="accent"></div>
+
+  <div class="team home">
+    <div class="team-copy">
+      <div id="homeName" class="team-name">ENDER FC</div>
+      <div id="homeShort" class="team-short">END</div>
+    </div>
+    <img id="homeLogo" class="crest" src="https://placehold.co/96x96/6d28d9/ffffff?text=EL" alt="">
+  </div>
+
+  <div class="center">
+    <div class="league">
+      <span class="league-dot"></span>
+      <span id="league">ENDER LEAGUE</span>
+    </div>
+    <div class="score">
+      <span id="homeScore">0</span>
+      <span class="colon">:</span>
+      <span id="awayScore">0</span>
+    </div>
+    <div class="meta">
+      <span class="live"></span>
+      <span id="status">EN DIRECTO</span>
+      <span>•</span>
+      <span id="clock">00:00</span>
+    </div>
+  </div>
+
+  <div class="team away">
+    <img id="awayLogo" class="crest" src="https://placehold.co/96x96/6d28d9/ffffff?text=EL" alt="">
+    <div class="team-copy">
+      <div id="awayName" class="team-name">NETHER FC</div>
+      <div id="awayShort" class="team-short">NTH</div>
+    </div>
+  </div>
+
+  <div class="cards home-cards">
+    <span class="card yellow" id="homeYellow">0</span>
+    <span class="card red" id="homeRed">0</span>
+  </div>
+  <div class="cards away-cards">
+    <span class="card yellow" id="awayYellow">0</span>
+    <span class="card red" id="awayRed">0</span>
+  </div>
+</div>
+
+<div id="goal" class="goal">
+  <div class="goal-inner">
+    <div class="goal-kicker">ENDER LEAGUE</div>
+    <div class="goal-title">GOOOOAAALLL!</div>
+    <div id="goalTeam" class="goal-team">ENDER FC</div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="display.js"></script>
+</body>
+</html>
